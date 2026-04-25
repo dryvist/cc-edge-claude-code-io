@@ -4,6 +4,9 @@ Pipeline tests — generic, parametrized over tests/fixtures/.
 Convention:
     tests/fixtures/<pipeline-name>/<case>.json          -- input event(s)
     tests/fixtures/<pipeline-name>/<case>.expected.json -- (optional) expected output
+    tests/fixtures/.skip-required-fields                -- (optional) marker;
+        when present, the required-fields assertion is bypassed for this pack
+        (use for pass-through packs whose downstream sets sourcetype/index).
 
 For each fixture:
 1. Save the input as a Cribl sample.
@@ -11,6 +14,9 @@ For each fixture:
 3. If <case>.expected.json exists, partial-match-assert each output event has
    the expected fields and values. Extra fields in actual output are allowed.
 4. If <case>.expected.json is absent, smoke-test only: assert non-empty output.
+5. Unless `.skip-required-fields` is present, assert every output event has
+   the canonical fields for this pack type (Edge: sourcetype + index;
+   Stream: host + source + _time).
 
 This file is GENERIC — copied verbatim from the template into every pack repo.
 Pack-specific behavior is expressed entirely through fixture data.
@@ -24,6 +30,7 @@ from pathlib import Path
 import pytest
 
 FIXTURES = Path(__file__).parent / "fixtures"
+SKIP_REQUIRED_FIELDS_MARKER = FIXTURES / ".skip-required-fields"
 
 
 def _discover_cases() -> list:
@@ -92,10 +99,11 @@ def test_pipeline_processes_sample(
             "Check the pipeline's filter/drop conditions."
         )
 
-        if expected_file is None:
-            return  # Smoke-test only
+        if expected_file is not None:
+            expected = _load_events(expected_file)
+            _assert_partial_match(result, expected, context=input_file.name)
 
-        expected = _load_events(expected_file)
-        _assert_partial_match(result, expected, context=input_file.name)
+        if not SKIP_REQUIRED_FIELDS_MARKER.exists():
+            cribl.assert_required_fields(result)
     finally:
         cribl.delete_sample(sample_id)
