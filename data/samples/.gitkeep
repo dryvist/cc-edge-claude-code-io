@@ -1,0 +1,6 @@
+# Cribl sample events live here. Each .json file is a Cribl-formatted sample
+# (typically a list of {"_raw": "..."} objects, optionally with structured fields).
+#
+# These files are referenced by default/samples.yml and surfaced in Cribl's UI
+# "Sample Data" preview pane. They can also be reused as test fixture inputs
+# (copy or symlink into tests/fixtures/<pipeline>/).

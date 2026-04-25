@@ -1,0 +1,13 @@
+{
+  "name": "REPLACE-WITH-PACK-NAME",
+  "version": "0.0.1",
+  "minLogStreamVersion": "4.17.0",
+  "author": "Your Name <your.email@example.com>",
+  "description": "REPLACE: Brief description of what this pack does.",
+  "displayName": "REPLACE With Display Name",
+  "tags": {
+    "streamtags": ["replace", "with", "tags"],
+    "dataType": ["logs"]
+  },
+  "exports": []
+}

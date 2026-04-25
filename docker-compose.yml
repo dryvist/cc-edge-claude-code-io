@@ -1,0 +1,22 @@
+# Local Cribl Stream container for pack testing.
+# Stream mode supports both Edge and Stream packs (Edge is a proper subset
+# of Stream) — running tests against Stream gives full pipeline coverage
+# regardless of pack_type.
+#
+# Mirrors the criblpacks pattern:
+#   https://github.com/criblpacks/cribl-palo-alto-networks/blob/main/test/docker-compose.yml
+services:
+  cribl:
+    image: cribl/cribl:${CRIBL_VERSION:-latest}
+    container_name: cribl-test
+    ports:
+      - "9000:9000"      # Stream UI/API
+      - "10080:10080"    # HTTP input
+      - "9514:9514"      # syslog TCP
+      - "9514:9514/udp"  # syslog UDP
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:9000/api/v1/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 30s

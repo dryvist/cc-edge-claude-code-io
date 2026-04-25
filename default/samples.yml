@@ -1,0 +1,9 @@
+# Catalog of sample events for Cribl's UI sample-data preview.
+# Add one entry per file in data/samples/<id>.json:
+#
+#   <sample-id>:
+#     sampleName: <descriptive-name>.log
+#     description: <what this sample represents>
+#     created: <unix-timestamp-ms>
+#     size: <bytes>
+#     numEvents: <count>

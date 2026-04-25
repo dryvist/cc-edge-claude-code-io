@@ -1,0 +1,3 @@
+# Placeholder. Replace with per-pipeline subdirectories:
+#   tests/fixtures/<pipeline-name>/<case>.json
+#   tests/fixtures/<pipeline-name>/<case>.expected.json

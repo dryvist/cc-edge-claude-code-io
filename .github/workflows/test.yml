@@ -1,0 +1,24 @@
+name: Test
+
+on:
+  pull_request:
+    paths:
+      - 'default/**'
+      - 'data/samples/**'
+      - 'tests/**'
+      - 'package.json'
+      - '.github/workflows/test.yml'
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    # Skip on the template repo itself; consumer repos have is_template: false.
+    if: github.event.repository.is_template == false
+    uses: dryvist/.github/.github/workflows/cribl-pack-test.yml@main
+    with:
+      # CHANGE per pack: 'edge' for Cribl Edge packs, 'stream' for Cribl Stream packs.
+      pack_type: edge

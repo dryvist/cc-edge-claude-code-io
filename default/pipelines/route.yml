@@ -1,0 +1,20 @@
+id: default
+groups: {}
+comments: []
+routes:
+  # Replace this placeholder route with your real routes.
+  # Validator rules:
+  #   - id and pipeline must be descriptive (no 'main', no 'route1')
+  #   - filter must be a real expression (not literally 'false' / '0')
+  #   - output MUST be __group (not input_id)
+  - id: REPLACE_ROUTE_ID
+    name: Replace With Route Name
+    final: true
+    disabled: false
+    pipeline: REPLACE_PIPELINE_NAME
+    description: "Placeholder — replace id, name, pipeline, and filter."
+    enableOutputExpression: false
+    targetContext: group
+    filter: "datatype=='replace-with-your-datatype'"
+    clones: []
+    output: __group

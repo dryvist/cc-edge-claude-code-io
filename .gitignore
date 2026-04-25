@@ -1,0 +1,17 @@
+.DS_Store
+*.swp
+*.bak
+
+# Build artifacts
+*.crbl
+
+# Python
+.venv/
+**/.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Editor / OS
+.idea/
+.vscode/
