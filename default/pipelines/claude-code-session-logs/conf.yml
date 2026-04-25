@@ -1,0 +1,10 @@
+output: default
+streamtags:
+  - vct
+  - ai
+  - claudecode
+  - anthropic
+groups: {}
+asyncFuncTimeout: 1000
+functions: []
+description: ""

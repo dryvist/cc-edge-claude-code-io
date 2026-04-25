@@ -1,9 +1,159 @@
-# Catalog of sample events for Cribl's UI sample-data preview.
-# Add one entry per file in data/samples/<id>.json:
-#
-#   <sample-id>:
-#     sampleName: <descriptive-name>.log
-#     description: <what this sample represents>
-#     created: <unix-timestamp-ms>
-#     size: <bytes>
-#     numEvents: <count>
+hO8QQb:
+  sampleName: sanitized_assistant.log
+  created: 1771394574676
+  size: 1542
+  numEvents: 1
+  description: A single assistant turn containing a tool invocation. The usage
+    block tracks input/output tokens and cache efficiency. The content array can
+    include text, tool_use, and tool_result blocks.
+k0h8NP:
+  sampleName: sanitized_file-history-snapshot.log
+  created: 1771394667232
+  size: 317
+  numEvents: 1
+  description: Emitted when Claude Code checkpoints the state of tracked files.
+    Used internally for session undo/restore. The trackedFileBackups object maps
+    file paths to their backed-up contents (empty here because no files were
+    modified at this point).
+36cP1M:
+  sampleName: sanitized_progress.log
+  description: Intermediate agent progress events emitted during multi-step tool
+    use. Contains the sub-agent's current assistant message (including tool
+    invocations and token usage), the original prompt that spawned the agent,
+    and parent/child tool-use IDs that link the step back to the top-level
+    conversation turn.
+  created: 1771394806642
+  size: 2395
+  numEvents: 1
+OsXDpa:
+  sampleName: sanitized_system.log
+  description: Internal system events such as hook execution summaries. The
+    stop_hook_summary subtype records the results of stop hooks that ran at the
+    end of a turn, including which hooks fired, any errors encountered, and
+    whether the hook prevented Claude from continuing.
+  created: 1771394922513
+  size: 832
+  numEvents: 1
+bCOM2K:
+  sampleName: sanitized_user.log
+  description: User-initiated messages and tool results returned to Claude. The
+    content array contains tool_result blocks with stdout/stderr from executed
+    commands. The toolUseResult object provides structured access to the same
+    output along with metadata like interrupted and isImage flags.
+  created: 1771394985326
+  size: 2208
+  numEvents: 1
+kkcx4D:
+  sampleName: sanitized_queue-operation.log
+  description: Internal message queue lifecycle events. Tracks enqueue and dequeue
+    operations as messages are added to and removed from the processing queue
+    within a session.
+  tags: ""
+  created: 1771395094056
+  size: 189
+  numEvents: 1
+CBxGTZ:
+  sampleName: sanitized_code_edit_tool_decision.json
+  tags: ""
+  created: 1771398781029
+  size: 5717
+  numEvents: 4
+  description: Counts accept/reject decisions specifically for Edit, Write, and
+    NotebookEdit tools. Includes language attribute so you can see which file
+    types get the most AI edits and how much developers trust the suggestions.
+DBvKLd:
+  sampleName: sanitized_cost_usage.json
+  created: 1771398969849
+  size: 14216
+  numEvents: 9
+  description: Tracks cumulative cost in USD per API request, broken down by
+    model. Essential for chargeback calculations and tracking spend across users
+    and teams.
+lCrlnQ:
+  sampleName: sanitized_lines_of_code_count.json
+  created: 1771398984911
+  size: 6664
+  numEvents: 4
+  description: Counts lines modified with a type attribute of added or removed.
+    Proxy for productivity impact, best used alongside commit/PR data.
+aukWzL:
+  sampleName: sanitized_active_time_total.json
+  created: 1771398995354
+  size: 14217
+  numEvents: 10
+  description: Accumulates seconds of active usage (typing prompts, receiving
+    responses) — excludes idle time. Good for measuring actual developer
+    engagement vs wall-clock session length.
+QtXzUr:
+  sampleName: sanitized_token_usage.json
+  created: 1771399004033
+  size: 39746
+  numEvents: 9
+  description: Counts tokens consumed, with a type attribute splitting across
+    input, output, cacheRead, and cacheCreation. Combined with cost, this lets
+    you measure cache efficiency.
+Io4OFW:
+  sampleName: sanitized_session_count.json
+  created: 1771399033605
+  size: 1107
+  numEvents: 1
+  description: Increments once each time a Claude Code CLI session starts. Useful
+    for tracking adoption and engagement across users/teams.
+mSfzuP:
+  sampleName: sanitized_event_tool_decision.json
+  created: 1771399122999
+  size: 8951
+  numEvents: 7
+  description: Logged when a tool permission decision is made, regardless of
+    outcome. Captures tool name, accept/reject, and the decision source (config,
+    user_permanent, user_temporary, user_abort, user_reject). Useful for
+    understanding trust patterns and whether developers are overriding allowlist
+    configs.
+smpLil:
+  sampleName: sanitized_event_api_error.json
+  created: 1771399240782
+  size: 2748
+  numEvents: 2
+  description: Logged when an API call fails. Includes status code, error message,
+    duration, and attempt number for retries. Great for alerting on rate limits
+    (429) or overloaded (529) patterns.
+go9A8j:
+  sampleName: sanitized_event_api_request.json
+  created: 1771399252648
+  size: 7428
+  numEvents: 5
+  description: Logged for every successful API call to Claude. Includes model,
+    cost, duration, and full token breakdown
+    (input/output/cacheRead/cacheCreation). The event-level complement to the
+    aggregated token and cost metrics.
+viOToM:
+  sampleName: sanitized_event_tool_result.json
+  created: 1771399266227
+  size: 8605
+  numEvents: 6
+  description: Logged when any tool finishes execution. Includes tool name,
+    success/failure, duration in ms, the user's accept/reject decision, decision
+    source, and for Bash tools the command parameters. This is your richest
+    event for understanding what Claude is actually doing.
+nuJv6j:
+  sampleName: sanitized_event_user_prompt.json
+  created: 1771399291083
+  size: 3680
+  numEvents: 3
+  description: Logged each time a user submits a prompt. Captures prompt_length
+    always; actual prompt content only if OTEL_LOG_USER_PROMPTS=1 is set
+    (redacted by default).
+QS0mDG:
+  sampleName: sanitized_pull_request_count.json
+  created: 1771399561086
+  size: 1114
+  numEvents: 1
+  description: Increments when Claude Code creates a pull request. Only fires if
+    the session actually triggers a PR creation.
+bw3bbR:
+  sampleName: sanitized_commit_count.json
+  created: 1771399579521
+  size: 1104
+  numEvents: 1
+  description: Increments when Claude Code creates a git commit. Same idea — only
+    fires on actual commit actions during the session.
