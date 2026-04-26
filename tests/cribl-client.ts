@@ -57,24 +57,17 @@ const REQUIRED_FIELDS: Record<PackType, readonly string[]> = {
   stream: ["host", "source", "_time"],
 };
 
-const EXCLUDED_TARBALL_BASENAMES = new Set([
-  ".git",
-  ".github",
-  "tests",
-  "test",
-  "node_modules",
-  "venv",
-  ".venv",
-  ".DS_Store",
-  ".idea",
-  ".vscode",
-  ".pytest_cache",
-  "__pycache__",
-  ".direnv",
-  "biome.jsonc",
-  "tsconfig.json",
-  "vitest.config.ts",
-  "pyrightconfig.json",
+// Cribl pack contents — only these top-level entries (mix of directories
+// and files) ship inside the .crbl. Whitelisting keeps the tarball stable
+// as repo-level dev tooling (flake.nix, biome.jsonc, etc.) accumulates.
+// node-tar's create() recurses into the directory entries automatically and
+// emits proper directory headers (Cribl rejects tarballs missing them).
+const PACK_ROOT_ENTRIES = new Set([
+  "data",
+  "default",
+  "package.json",
+  "README.md",
+  "LICENSE",
 ]);
 
 export class CriblClient {
@@ -541,26 +534,10 @@ export function getPackId(): string {
 // ---- Internal helpers --------------------------------------------------
 
 async function collectTarballEntries(packRoot: string): Promise<string[]> {
-  const entries: string[] = [];
-  for await (const rel of walk(packRoot, packRoot)) {
-    const base = path.basename(rel);
-    if (EXCLUDED_TARBALL_BASENAMES.has(base)) continue;
-    if (rel.endsWith(".crbl")) continue;
-    entries.push(rel);
-  }
-  return entries;
-}
-
-async function* walk(root: string, dir: string): AsyncGenerator<string> {
-  const dirents = await readdir(dir, { withFileTypes: true });
-  for (const dirent of dirents) {
-    if (EXCLUDED_TARBALL_BASENAMES.has(dirent.name)) continue;
-    const full = path.join(dir, dirent.name);
-    const rel = path.relative(root, full);
-    if (dirent.isDirectory()) {
-      yield* walk(root, full);
-    } else if (dirent.isFile()) {
-      yield rel;
-    }
-  }
+  const dirents = await readdir(packRoot, { withFileTypes: true });
+  // Sort for determinism — readdir() ordering varies across filesystems.
+  return dirents
+    .filter((d) => PACK_ROOT_ENTRIES.has(d.name))
+    .map((d) => d.name)
+    .sort();
 }
