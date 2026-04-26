@@ -1,0 +1,9 @@
+# Pre-commit hooks. Install via:  pnpm install --dir tests   (runs `prepare`)
+# Skip a single commit with:  LEFTHOOK=0 git commit ...
+pre-commit:
+  parallel: true
+  commands:
+    biome:
+      glob: '*.{js,jsx,ts,tsx,json,jsonc,yaml,yml,md}'
+      run: cd tests && pnpm exec biome check --no-errors-on-unmatched --staged --write {staged_files}
+      stage_fixed: true

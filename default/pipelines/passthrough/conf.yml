@@ -1,0 +1,20 @@
+output: default
+streamtags: []
+groups: {}
+asyncFuncTimeout: 1000
+description: >-
+  Demo passthrough pipeline. Stamps Splunk-canonical fields
+  (sourcetype, index, datatype) on every event. Replace this
+  with your real pipeline logic when scaffolding a new pack.
+functions:
+  - id: eval
+    filter: "true"
+    disabled: false
+    conf:
+      add:
+        - name: sourcetype
+          value: "'cribl:demo'"
+        - name: index
+          value: "'main'"
+        - name: datatype
+          value: "'cribl-demo'"

@@ -1,0 +1,28 @@
+{
+  // dryvist canonical Biome config (mirror of dryvist/.github/biome.jsonc).
+  "$schema": "https://biomejs.dev/schemas/2.3.6/schema.json",
+  "vcs": {
+    "enabled": true,
+    "clientKind": "git",
+    "useIgnoreFile": true
+  },
+  "files": {
+    "includes": [
+      "**",
+      "!**/node_modules",
+      "!**/dist",
+      "!**/.direnv",
+      "!**/default",
+      "!**/data/samples",
+      "!**/tests/fixtures"
+    ]
+  },
+  "formatter": { "enabled": true, "useEditorconfig": true },
+  "linter": { "enabled": true },
+  "json": {
+    "parser": {
+      "allowComments": true,
+      "allowTrailingCommas": true
+    }
+  }
+}

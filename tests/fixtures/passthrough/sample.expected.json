@@ -1,0 +1,8 @@
+[
+  {
+    "sourcetype": "cribl:demo",
+    "index": "main",
+    "datatype": "cribl-demo",
+    "_raw": "demo event"
+  }
+]

@@ -16,9 +16,10 @@ permissions:
 
 jobs:
   test:
-    # Skip on the template repo itself; consumer repos have is_template: false.
-    if: github.event.repository.is_template == false
-    uses: dryvist/.github/.github/workflows/cribl-pack-test.yml@main
+    # Runs on the template too — the template now ships a working demo
+    # passthrough pipeline + fixture so the harness gets exercised here
+    # before consumer repos inherit it.
+    uses: dryvist/cc-edge-pack-template/.github/workflows/cribl-pack-test.yml@main
     with:
       # CHANGE per pack: 'edge' for Cribl Edge packs, 'stream' for Cribl Stream packs.
       pack_type: edge
