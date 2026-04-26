@@ -4,7 +4,7 @@
   "release-type": "node",
   "packages": {
     ".": {
-      "package-name": "cc-edge-pack-template",
+      "package-name": "cc-edge-claude-code-io",
       "changelog-path": "CHANGELOG.md",
       "extra-files": ["package.json"]
     }

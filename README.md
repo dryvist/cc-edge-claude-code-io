@@ -312,7 +312,7 @@ Monitors all Claude Code session transcript files. Each `.jsonl` file represents
 - **Auth:** None
 - **OTLP Version:** 1.3.1
 - **Max active connections:** 1000
-- **Metadata:** `datatype == ''claude-code-otel'`
+- **Metadata:** `datatype == 'claude-code-otel'`
 
 Receives OTLP telemetry (metrics and logs) directly from Claude Code over gRPC.
 

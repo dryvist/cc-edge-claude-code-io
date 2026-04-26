@@ -31,7 +31,7 @@ Both pipelines tag events with Splunk-canonical fields:
 
 - `package.json` — pack metadata
 - `default/inputs.yml` — file-monitor + OTLP source config
-- `default/pipelines/route.yml` — routes (filter on `_metadata.datatype`)
+- `default/pipelines/route.yml` — routes (filter on top-level `datatype`, set by the input's metadata)
 - `default/pipelines/claude-code-{otel,session-logs}/conf.yml` — Eval functions setting sourcetype/index/datatype
 - `default/samples.yml` — sample catalog
 - `data/samples/*.json` — captured sample events

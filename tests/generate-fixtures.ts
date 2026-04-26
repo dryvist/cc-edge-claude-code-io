@@ -1,10 +1,9 @@
 /**
  * One-off fixture-generation helper.
  *
- * Usage (with the typescript devShell + Cribl up at localhost:9000):
+ * Usage (from tests/, with Cribl up at localhost:9000 via `make docker-up`):
  *
- *   node --experimental-strip-types tests/generate-fixtures.ts \
- *     <pipeline-name> <input-fixture-path>
+ *   pnpm exec tsx generate-fixtures.ts <pipeline-name> fixtures/<pipeline>/<case>.json
  *
  * Reads the input fixture, runs it through the named pipeline against the
  * live Cribl Stream container, trims the output to partial-match-friendly
