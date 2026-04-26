@@ -16,8 +16,6 @@ permissions:
 
 jobs:
   test:
-    # Pinned to feature/ts-pivot until dryvist/cc-edge-pack-template#3 lands.
-    # Flip to @main as soon as that PR merges.
-    uses: dryvist/cc-edge-pack-template/.github/workflows/cribl-pack-test.yml@feature/ts-pivot
+    uses: dryvist/cc-edge-pack-template/.github/workflows/cribl-pack-test.yml@main
     with:
       pack_type: edge
