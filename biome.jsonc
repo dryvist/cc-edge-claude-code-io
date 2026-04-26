@@ -1,6 +1,5 @@
 {
   // dryvist canonical Biome config (mirror of dryvist/.github/biome.jsonc).
-  // Renovate keeps copies across pack repos in sync; manual edits here drift.
   "$schema": "https://biomejs.dev/schemas/2.3.6/schema.json",
   "vcs": {
     "enabled": true,
@@ -11,51 +10,16 @@
     "includes": [
       "**",
       "!**/node_modules",
-      "!**/.venv",
       "!**/dist",
-      "!**/coverage",
       "!**/.direnv",
       "!**/default",
       "!**/data/samples",
       "!**/tests/fixtures"
     ]
   },
-  "formatter": {
-    "enabled": true,
-    "indentStyle": "space",
-    "indentWidth": 2,
-    "lineWidth": 100,
-    "lineEnding": "lf"
-  },
-  "linter": {
-    "enabled": true,
-    "rules": {
-      "recommended": true,
-      "style": {
-        "noNonNullAssertion": "error",
-        "useImportType": "warn"
-      },
-      "suspicious": {
-        "noConsole": "off"
-      },
-      "correctness": {
-        "noUnusedImports": "error",
-        "noUnusedVariables": "error"
-      }
-    }
-  },
-  "javascript": {
-    "formatter": {
-      "quoteStyle": "single",
-      "semicolons": "always",
-      "trailingCommas": "all",
-      "arrowParentheses": "always"
-    }
-  },
+  "formatter": { "enabled": true, "useEditorconfig": true },
+  "linter": { "enabled": true },
   "json": {
-    "formatter": {
-      "trailingCommas": "none"
-    },
     "parser": {
       "allowComments": true,
       "allowTrailingCommas": true

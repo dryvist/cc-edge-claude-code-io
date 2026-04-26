@@ -5,6 +5,7 @@
   "description": "Cribl pack test harness — Vitest-based, scaffolded into every dryvist pack from cc-edge-pack-template.",
   "type": "module",
   "scripts": {
+    "prepare": "cd .. && lefthook install",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
@@ -19,8 +20,8 @@
     "@biomejs/biome": "^2.0.0",
     "@types/node": "^22.0.0",
     "@types/tar": "^6.1.13",
+    "lefthook": "^1.7.0",
     "tar": "^7.4.3",
-    "tsx": "^4.21.0",
     "typescript": "^5.6.0",
     "vitest": "^2.1.0",
     "yaml": "^2.6.0"

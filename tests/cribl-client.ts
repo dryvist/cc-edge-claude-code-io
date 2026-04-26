@@ -9,25 +9,25 @@
  * - https://github.com/criblpacks/cribl-palo-alto-networks
  */
 
-import { randomUUID } from 'node:crypto';
-import { readFileSync } from 'node:fs';
-import { readdir, readFile } from 'node:fs/promises';
-import * as path from 'node:path';
-import { setTimeout as sleep } from 'node:timers/promises';
-import { create as tarCreate } from 'tar';
-import { parse as yamlParse } from 'yaml';
-import { parseSimpleFilter } from './parse-filter.js';
+import { randomUUID } from "node:crypto";
+import { readFileSync } from "node:fs";
+import { readdir, readFile } from "node:fs/promises";
+import * as path from "node:path";
+import { setTimeout as sleep } from "node:timers/promises";
+import { create as tarCreate } from "tar";
+import { parse as yamlParse } from "yaml";
+import { parseSimpleFilter } from "./parse-filter.js";
 
 // PACK_ROOT is the directory containing default/, data/, package.json — i.e.
 // one level up from this tests/ folder.
-export const PACK_ROOT = path.resolve(import.meta.dirname, '..');
+export const PACK_ROOT = path.resolve(import.meta.dirname, "..");
 
 export interface CriblClientOptions {
   host?: string | undefined;
   port?: number | undefined;
   username?: string | undefined;
   password?: string | undefined;
-  scheme?: 'http' | 'https' | undefined;
+  scheme?: "http" | "https" | undefined;
 }
 
 export interface CriblEvent {
@@ -50,18 +50,32 @@ export interface RouteFlowResult {
   events: CriblEvent[];
 }
 
-export type PackType = 'edge' | 'stream';
+export type PackType = "edge" | "stream";
 
 const REQUIRED_FIELDS: Record<PackType, readonly string[]> = {
-  edge: ['sourcetype', 'index'],
-  stream: ['host', 'source', '_time'],
+  edge: ["sourcetype", "index"],
+  stream: ["host", "source", "_time"],
 };
 
-// Cribl pack contents — only these top-level entries ship inside the .crbl.
-// Whitelisting (rather than blacklisting tooling files) keeps the tarball
-// stable as we add repo-level dev tooling (flake.nix, biome.jsonc, etc.) that
-// shouldn't leak into the pack distribution.
-const PACK_ROOT_ENTRIES = new Set(['data', 'default', 'package.json', 'README.md', 'LICENSE']);
+const EXCLUDED_TARBALL_BASENAMES = new Set([
+  ".git",
+  ".github",
+  "tests",
+  "test",
+  "node_modules",
+  "venv",
+  ".venv",
+  ".DS_Store",
+  ".idea",
+  ".vscode",
+  ".pytest_cache",
+  "__pycache__",
+  ".direnv",
+  "biome.jsonc",
+  "tsconfig.json",
+  "vitest.config.ts",
+  "pyrightconfig.json",
+]);
 
 export class CriblClient {
   readonly host: string;
@@ -72,11 +86,11 @@ export class CriblClient {
   private cachedToken: string | null = null;
 
   constructor(options: CriblClientOptions = {}) {
-    this.host = options.host ?? 'localhost';
+    this.host = options.host ?? "localhost";
     this.port = options.port ?? 9000;
-    this.username = options.username ?? 'admin';
-    this.password = options.password ?? 'admin';
-    this.scheme = options.scheme ?? 'http';
+    this.username = options.username ?? "admin";
+    this.password = options.password ?? "admin";
+    this.scheme = options.scheme ?? "http";
   }
 
   get baseUrl(): string {
@@ -85,12 +99,17 @@ export class CriblClient {
 
   private async login(): Promise<string> {
     const response = await fetch(`${this.baseUrl}/auth/login`, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ username: this.username, password: this.password }),
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        username: this.username,
+        password: this.password,
+      }),
     });
     if (!response.ok) {
-      throw new Error(`Cribl login failed: HTTP ${response.status} ${await response.text()}`);
+      throw new Error(
+        `Cribl login failed: HTTP ${response.status} ${await response.text()}`,
+      );
     }
     const body = (await response.json()) as { token: string };
     return body.token;
@@ -121,13 +140,15 @@ export class CriblClient {
       contentType?: string | undefined;
     } = {},
   ): Promise<unknown> {
-    const prefix = options.pack !== undefined ? `/p/${options.pack}` : '';
+    const prefix = options.pack !== undefined ? `/p/${options.pack}` : "";
     const search =
       options.params !== undefined
         ? `?${new URLSearchParams(
-            Object.fromEntries(Object.entries(options.params).map(([k, v]) => [k, String(v)])),
+            Object.fromEntries(
+              Object.entries(options.params).map(([k, v]) => [k, String(v)]),
+            ),
           ).toString()}`
-        : '';
+        : "";
     const url = `${this.baseUrl}${prefix}${endpoint}${search}`;
 
     const headers: Record<string, string> = {};
@@ -137,10 +158,11 @@ export class CriblClient {
 
     let body: string | Uint8Array | undefined;
     if (options.payload !== undefined) {
-      headers['content-type'] = options.contentType ?? 'application/json';
+      headers["content-type"] = options.contentType ?? "application/json";
       body = JSON.stringify(options.payload);
     } else if (options.body !== undefined) {
-      headers['content-type'] = options.contentType ?? 'application/octet-stream';
+      headers["content-type"] =
+        options.contentType ?? "application/octet-stream";
       body = options.body;
     }
 
@@ -148,6 +170,12 @@ export class CriblClient {
     if (body !== undefined) init.body = body;
     const response = await fetch(url, init);
     const text = await response.text();
+
+    if (!response.ok) {
+      throw new Error(
+        `Cribl API ${method.toUpperCase()} ${endpoint} failed: HTTP ${response.status} ${response.statusText} — ${text || "<empty body>"}`,
+      );
+    }
 
     // Try JSON first; fall back to NDJSON; fall back to raw text.
     if (text.length === 0) return null;
@@ -215,14 +243,18 @@ export class CriblClient {
    * appears (or throw on timeout). Without `expectedId`, returns immediately
    * after the install POST.
    */
-  async installPack(tarball: Buffer, expectedId?: string, timeoutSeconds = 30): Promise<void> {
+  async installPack(
+    tarball: Buffer,
+    expectedId?: string,
+    timeoutSeconds = 30,
+  ): Promise<void> {
     const filename = `${randomUUID()}.crbl`;
-    const upload = await this.call('put', '/packs', {
+    const upload = await this.call("put", "/packs", {
       params: { filename, size: tarball.length },
       body: new Uint8Array(tarball),
     });
     if (upload !== null && upload !== undefined) {
-      await this.call('post', '/packs', { payload: upload });
+      await this.call("post", "/packs", { payload: upload });
     }
 
     if (expectedId === undefined) return;
@@ -240,15 +272,19 @@ export class CriblClient {
   }
 
   async deletePack(packId: string): Promise<void> {
-    const info = await this.call('get', `/packs/${packId}`);
+    const info = await this.call("get", `/packs/${packId}`);
     if (info !== null && info !== undefined) {
-      await this.call('delete', `/packs/${packId}`, { payload: info });
+      await this.call("delete", `/packs/${packId}`, { payload: info });
     }
   }
 
   async listPacks(): Promise<{ id?: string }[]> {
-    const response = await this.call('get', '/packs');
-    if (response !== null && typeof response === 'object' && 'items' in response) {
+    const response = await this.call("get", "/packs");
+    if (
+      response !== null &&
+      typeof response === "object" &&
+      "items" in response
+    ) {
       const items = (response as { items: unknown }).items;
       if (Array.isArray(items)) return items as { id?: string }[];
     }
@@ -258,7 +294,7 @@ export class CriblClient {
   // ---- Sample lifecycle -----------------------------------------------
 
   async saveSample(name: string, events: CriblEvent[]): Promise<string> {
-    const response = (await this.call('post', '/system/samples', {
+    const response = (await this.call("post", "/system/samples", {
       payload: { sampleName: name, context: { events } },
     })) as { items: { id: string }[] };
     if (response.items[0] === undefined) {
@@ -268,30 +304,40 @@ export class CriblClient {
   }
 
   async deleteSample(sampleId: string): Promise<void> {
-    const info = await this.call('get', `/system/samples/${sampleId}`);
+    const info = await this.call("get", `/system/samples/${sampleId}`);
     if (
       info !== null &&
-      typeof info === 'object' &&
-      'items' in info &&
+      typeof info === "object" &&
+      "items" in info &&
       Array.isArray((info as { items: unknown }).items) &&
       (info as { items: unknown[] }).items.length > 0
     ) {
-      await this.call('delete', `/system/samples/${sampleId}`, {
+      await this.call("delete", `/system/samples/${sampleId}`, {
         payload: (info as { items: unknown[] }).items[0],
       });
     }
   }
 
   async deleteAllSamples(): Promise<void> {
-    const response = await this.call('get', '/system/samples');
-    if (response === null || typeof response !== 'object' || !('items' in response)) return;
+    const response = await this.call("get", "/system/samples");
+    if (
+      response === null ||
+      typeof response !== "object" ||
+      !("items" in response)
+    )
+      return;
     const items = (response as { items: unknown[] }).items;
     if (!Array.isArray(items)) return;
     for (const sample of items) {
-      if (sample !== null && typeof sample === 'object' && 'isTemplate' in sample) continue;
+      if (
+        sample !== null &&
+        typeof sample === "object" &&
+        "isTemplate" in sample
+      )
+        continue;
       const id = (sample as { id?: string }).id;
       if (id !== undefined) {
-        await this.call('delete', `/system/samples/${id}`, { payload: sample });
+        await this.call("delete", `/system/samples/${id}`, { payload: sample });
       }
     }
   }
@@ -301,12 +347,16 @@ export class CriblClient {
   async runPipeline(
     pipeline: string,
     sampleId: string,
-    options: { pack?: string | undefined; timeoutMs?: number; memoryMb?: number } = {},
+    options: {
+      pack?: string | undefined;
+      timeoutMs?: number;
+      memoryMb?: number;
+    } = {},
   ): Promise<CriblEvent[]> {
-    const response = await this.call('post', '/preview', {
+    const response = await this.call("post", "/preview", {
       pack: options.pack,
       payload: {
-        mode: 'pipe',
+        mode: "pipe",
         pipelineId: pipeline,
         level: 3,
         sampleId,
@@ -316,7 +366,11 @@ export class CriblClient {
         memory: options.memoryMb ?? 2048,
       },
     });
-    if (response !== null && typeof response === 'object' && 'items' in response) {
+    if (
+      response !== null &&
+      typeof response === "object" &&
+      "items" in response
+    ) {
       const items = (response as { items: unknown }).items;
       if (Array.isArray(items)) return items as CriblEvent[];
     }
@@ -344,21 +398,27 @@ export class CriblClient {
     events: CriblEvent[],
     options: { pack?: string | undefined } = {},
   ): Promise<RouteFlowResult> {
-    const routeYml = path.join(PACK_ROOT, 'default', 'pipelines', 'route.yml');
-    const config = yamlParse(await readFile(routeYml, 'utf-8')) as { routes?: Route[] };
+    const routeYml = path.join(PACK_ROOT, "default", "pipelines", "route.yml");
+    const config = yamlParse(await readFile(routeYml, "utf-8")) as {
+      routes?: Route[];
+    };
 
     const skippedFilters: string[] = [];
     for (const route of config.routes ?? []) {
       if (route.disabled === true) continue;
       const parsed = parseSimpleFilter(route.filter);
       if (parsed === null) {
-        skippedFilters.push(route.filter ?? '');
+        skippedFilters.push(route.filter ?? "");
         continue;
       }
       const [field, expectedValue] = parsed;
       const matches = events.some((event) => event[field] === expectedValue);
       if (matches) {
-        const output = await this.runPipeline(route.pipeline, sampleId, options);
+        const output = await this.runPipeline(
+          route.pipeline,
+          sampleId,
+          options,
+        );
         return { route, pipeline: route.pipeline, events: output };
       }
     }
@@ -390,19 +450,29 @@ export class CriblClient {
 
     if (violations.length > 0) {
       throw new Error(
-        `${resolvedType} pack required fields ${JSON.stringify(required)} missing from ${violations.length}/${events.length} event(s):\n  ${violations.join('\n  ')}`,
+        `${resolvedType} pack required fields ${JSON.stringify(required)} missing from ${violations.length}/${events.length} event(s):\n  ${violations.join("\n  ")}`,
       );
     }
   }
 
   // ---- Live capture (primitives reserved for future integration tests) -
 
-  async startCapture(filterExpr: string, maxEvents = 100, timeoutMs = 30_000): Promise<string> {
-    const response = await this.call('post', '/lib/captures', {
+  async startCapture(
+    filterExpr: string,
+    maxEvents = 100,
+    timeoutMs = 30_000,
+  ): Promise<string> {
+    const response = await this.call("post", "/lib/captures", {
       payload: { filter: filterExpr, maxEvents, timeout: timeoutMs, level: 0 },
     });
-    if (response === null || typeof response !== 'object' || !('captureId' in response)) {
-      throw new Error(`Unexpected capture response: ${JSON.stringify(response)}`);
+    if (
+      response === null ||
+      typeof response !== "object" ||
+      !("captureId" in response)
+    ) {
+      throw new Error(
+        `Unexpected capture response: ${JSON.stringify(response)}`,
+      );
     }
     return (response as { captureId: string }).captureId;
   }
@@ -415,19 +485,24 @@ export class CriblClient {
     const timeoutSeconds = options.timeoutSeconds ?? 60;
     const deadline = Date.now() + timeoutSeconds * 1000;
     while (Date.now() < deadline) {
-      const response = await this.call('get', `/lib/captures/${captureId}/events`);
+      const response = await this.call(
+        "get",
+        `/lib/captures/${captureId}/events`,
+      );
       if (
         response !== null &&
-        typeof response === 'object' &&
-        'status' in response &&
-        (response as { status: string }).status === 'complete'
+        typeof response === "object" &&
+        "status" in response &&
+        (response as { status: string }).status === "complete"
       ) {
         const items = (response as { items?: unknown }).items;
         return Array.isArray(items) ? (items as CriblEvent[]) : [];
       }
       await sleep(pollIntervalMs);
     }
-    throw new Error(`Capture ${captureId} did not complete in ${timeoutSeconds}s`);
+    throw new Error(
+      `Capture ${captureId} did not complete in ${timeoutSeconds}s`,
+    );
   }
 }
 
@@ -435,12 +510,14 @@ export class CriblClient {
  * Infer pack type from the pack root's package.json name field.
  */
 export function detectPackType(): PackType {
-  const pkg = JSON.parse(readFileSync(path.join(PACK_ROOT, 'package.json'), 'utf-8')) as {
+  const pkg = JSON.parse(
+    readFileSync(path.join(PACK_ROOT, "package.json"), "utf-8"),
+  ) as {
     name?: string;
   };
-  const name = pkg.name ?? '';
-  if (name.startsWith('cc-edge-')) return 'edge';
-  if (name.startsWith('cc-stream-')) return 'stream';
+  const name = pkg.name ?? "";
+  if (name.startsWith("cc-edge-")) return "edge";
+  if (name.startsWith("cc-stream-")) return "stream";
   throw new Error(
     `Cannot detect pack_type from package.json name '${name}'; expected 'cc-edge-<source>-io' or 'cc-stream-<source>-io' prefix.`,
   );
@@ -450,7 +527,9 @@ export function detectPackType(): PackType {
  * Read the pack id (package.json name) — used by tests + setup.
  */
 export function getPackId(): string {
-  const pkg = JSON.parse(readFileSync(path.join(PACK_ROOT, 'package.json'), 'utf-8')) as {
+  const pkg = JSON.parse(
+    readFileSync(path.join(PACK_ROOT, "package.json"), "utf-8"),
+  ) as {
     name?: string;
   };
   if (pkg.name === undefined || pkg.name.length === 0) {
@@ -462,6 +541,26 @@ export function getPackId(): string {
 // ---- Internal helpers --------------------------------------------------
 
 async function collectTarballEntries(packRoot: string): Promise<string[]> {
-  const dirents = await readdir(packRoot, { withFileTypes: true });
-  return dirents.filter((d) => PACK_ROOT_ENTRIES.has(d.name)).map((d) => d.name);
+  const entries: string[] = [];
+  for await (const rel of walk(packRoot, packRoot)) {
+    const base = path.basename(rel);
+    if (EXCLUDED_TARBALL_BASENAMES.has(base)) continue;
+    if (rel.endsWith(".crbl")) continue;
+    entries.push(rel);
+  }
+  return entries;
+}
+
+async function* walk(root: string, dir: string): AsyncGenerator<string> {
+  const dirents = await readdir(dir, { withFileTypes: true });
+  for (const dirent of dirents) {
+    if (EXCLUDED_TARBALL_BASENAMES.has(dirent.name)) continue;
+    const full = path.join(dir, dirent.name);
+    const rel = path.relative(root, full);
+    if (dirent.isDirectory()) {
+      yield* walk(root, full);
+    } else if (dirent.isFile()) {
+      yield rel;
+    }
+  }
 }
