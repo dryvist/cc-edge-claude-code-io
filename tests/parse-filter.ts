@@ -7,8 +7,10 @@ const SIMPLE_FILTER_RE = /^\s*([A-Za-z_]\w*)\s*==\s*['"](.*?)['"]\s*$/;
  * Parse `<field>=='<value>'` (or `=="<value>"`) into [field, value].
  * Returns null for any expression we cannot statically resolve.
  */
-export function parseSimpleFilter(expr: string | null | undefined): [string, string] | null {
-  const match = (expr ?? '').match(SIMPLE_FILTER_RE);
+export function parseSimpleFilter(
+  expr: string | null | undefined,
+): [string, string] | null {
+  const match = (expr ?? "").match(SIMPLE_FILTER_RE);
   if (!match || match[1] === undefined || match[2] === undefined) {
     return null;
   }

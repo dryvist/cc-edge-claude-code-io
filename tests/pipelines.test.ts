@@ -20,14 +20,17 @@
  *    has the canonical fields for this pack type.
  */
 
-import { existsSync, readdirSync, readFileSync } from 'node:fs';
-import * as path from 'node:path';
-import { describe, expect, it } from 'vitest';
-import { CriblClient, type CriblEvent } from './cribl-client.js';
-import { getInstalledPackId, makeClient } from './test-helpers.js';
+import { existsSync, readdirSync, readFileSync } from "node:fs";
+import * as path from "node:path";
+import { describe, expect, it } from "vitest";
+import { CriblClient, type CriblEvent } from "./cribl-client.js";
+import { getInstalledPackId, makeClient } from "./test-helpers.js";
 
-const FIXTURES = path.join(import.meta.dirname, 'fixtures');
-const SKIP_REQUIRED_FIELDS_MARKER = path.join(FIXTURES, '.skip-required-fields');
+const FIXTURES = path.join(import.meta.dirname, "fixtures");
+const SKIP_REQUIRED_FIELDS_MARKER = path.join(
+  FIXTURES,
+  ".skip-required-fields",
+);
 
 interface FixtureCase {
   pipeline: string;
@@ -39,15 +42,15 @@ interface FixtureCase {
 function discoverCases(): FixtureCase[] {
   if (!existsSync(FIXTURES)) return [];
   const cases: FixtureCase[] = [];
-  for (const entry of readdirSync(FIXTURES, { withFileTypes: true }).sort((a, b) =>
-    a.name.localeCompare(b.name),
+  for (const entry of readdirSync(FIXTURES, { withFileTypes: true }).sort(
+    (a, b) => a.name.localeCompare(b.name),
   )) {
     if (!entry.isDirectory()) continue;
     const pipelineDir = path.join(FIXTURES, entry.name);
     const files = readdirSync(pipelineDir).sort();
     for (const file of files) {
-      if (!file.endsWith('.json') || file.endsWith('.expected.json')) continue;
-      const stem = file.slice(0, -'.json'.length);
+      if (!file.endsWith(".json") || file.endsWith(".expected.json")) continue;
+      const stem = file.slice(0, -".json".length);
       const expectedFile = path.join(pipelineDir, `${stem}.expected.json`);
       cases.push({
         pipeline: entry.name,
@@ -61,11 +64,15 @@ function discoverCases(): FixtureCase[] {
 }
 
 function loadEvents(filePath: string): CriblEvent[] {
-  const raw = JSON.parse(readFileSync(filePath, 'utf-8')) as unknown;
+  const raw = JSON.parse(readFileSync(filePath, "utf-8")) as unknown;
   return Array.isArray(raw) ? (raw as CriblEvent[]) : [raw as CriblEvent];
 }
 
-function assertPartialMatch(actual: CriblEvent[], expected: CriblEvent[], context: string): void {
+function assertPartialMatch(
+  actual: CriblEvent[],
+  expected: CriblEvent[],
+  context: string,
+): void {
   expect(
     actual.length,
     `${context}: pipeline produced ${actual.length} events, expected ${expected.length}`,
@@ -75,9 +82,10 @@ function assertPartialMatch(actual: CriblEvent[], expected: CriblEvent[], contex
     const exp = expected[i];
     if (act === undefined || exp === undefined) continue;
     for (const [key, expVal] of Object.entries(exp)) {
-      expect(key in act, `${context} event ${i}: expected key '${key}' missing from output`).toBe(
-        true,
-      );
+      expect(
+        key in act,
+        `${context} event ${i}: expected key '${key}' missing from output`,
+      ).toBe(true);
       expect(
         act[key],
         `${context} event ${i}, key '${key}': expected ${JSON.stringify(expVal)}, got ${JSON.stringify(act[key])}`,
@@ -89,9 +97,9 @@ function assertPartialMatch(actual: CriblEvent[], expected: CriblEvent[], contex
 const CASES = discoverCases();
 const SKIP_REQUIRED_FIELDS = existsSync(SKIP_REQUIRED_FIELDS_MARKER);
 
-describe('pipeline behavior (fixture-driven)', () => {
+describe("pipeline behavior (fixture-driven)", () => {
   if (CASES.length === 0) {
-    it.skip('no fixtures found in tests/fixtures/<pipeline>/', () => undefined);
+    it.skip("no fixtures found in tests/fixtures/<pipeline>/", () => undefined);
     return;
   }
 
@@ -100,9 +108,14 @@ describe('pipeline behavior (fixture-driven)', () => {
       const events = loadEvents(fixture.inputFile);
       const client = makeClient();
       const packId = getInstalledPackId();
-      const sampleId = await client.saveSample(path.basename(fixture.inputFile, '.json'), events);
+      const sampleId = await client.saveSample(
+        path.basename(fixture.inputFile, ".json"),
+        events,
+      );
       try {
-        const result = await client.runPipeline(fixture.pipeline, sampleId, { pack: packId });
+        const result = await client.runPipeline(fixture.pipeline, sampleId, {
+          pack: packId,
+        });
 
         expect(
           result.length,
@@ -111,7 +124,11 @@ describe('pipeline behavior (fixture-driven)', () => {
 
         if (fixture.expectedFile !== null) {
           const expected = loadEvents(fixture.expectedFile);
-          assertPartialMatch(result, expected, path.basename(fixture.inputFile));
+          assertPartialMatch(
+            result,
+            expected,
+            path.basename(fixture.inputFile),
+          );
         }
 
         if (!SKIP_REQUIRED_FIELDS) {

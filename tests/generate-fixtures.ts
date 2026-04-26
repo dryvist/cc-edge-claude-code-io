@@ -16,11 +16,22 @@
  * version.
  */
 
-import { readFile, writeFile } from 'node:fs/promises';
-import { dirname, join, resolve } from 'node:path';
-import { CriblClient, type CriblEvent, getPackId, PACK_ROOT } from './cribl-client.js';
+import { readFile, writeFile } from "node:fs/promises";
+import { dirname, join, resolve } from "node:path";
+import {
+  CriblClient,
+  type CriblEvent,
+  getPackId,
+  PACK_ROOT,
+} from "./cribl-client.js";
 
-const PARTIAL_MATCH_KEYS = ['sourcetype', 'index', 'datatype', '_raw', '_time'] as const;
+const PARTIAL_MATCH_KEYS = [
+  "sourcetype",
+  "index",
+  "datatype",
+  "_raw",
+  "_time",
+] as const;
 
 function trim(events: CriblEvent[]): CriblEvent[] {
   return events.map((event) => {
@@ -36,30 +47,36 @@ async function main(): Promise<void> {
   const [, , pipeline, inputPath] = process.argv;
   if (pipeline === undefined || inputPath === undefined) {
     console.error(
-      'Usage: node --experimental-strip-types tests/generate-fixtures.ts <pipeline> <input-fixture-path>',
+      "Usage: node --experimental-strip-types tests/generate-fixtures.ts <pipeline> <input-fixture-path>",
     );
     process.exit(1);
   }
 
   const absInput = resolve(inputPath);
-  const filename = absInput.split('/').pop();
+  const filename = absInput.split("/").pop();
   if (filename === undefined) {
     throw new Error(`Could not derive filename from path '${absInput}'`);
   }
-  const expectedPath = join(dirname(absInput), `${filename.replace(/\.json$/, '')}.expected.json`);
+  const expectedPath = join(
+    dirname(absInput),
+    `${filename.replace(/\.json$/, "")}.expected.json`,
+  );
 
-  const events = JSON.parse(await readFile(absInput, 'utf-8')) as CriblEvent[];
+  const events = JSON.parse(await readFile(absInput, "utf-8")) as CriblEvent[];
   console.log(`Loaded ${events.length} input event(s) from ${absInput}`);
 
   const client = new CriblClient({
     host: process.env.CRIBL_HOST,
-    port: process.env.CRIBL_PORT !== undefined ? Number(process.env.CRIBL_PORT) : undefined,
+    port:
+      process.env.CRIBL_PORT !== undefined
+        ? Number(process.env.CRIBL_PORT)
+        : undefined,
     username: process.env.CRIBL_USER,
     password: process.env.CRIBL_PASS,
   });
 
   await client.waitUntilReady();
-  console.log('Cribl is ready');
+  console.log("Cribl is ready");
 
   const packId = getPackId();
   const tarball = await CriblClient.createPackTarball(PACK_ROOT);
@@ -68,7 +85,9 @@ async function main(): Promise<void> {
 
   try {
     const sampleId = await client.saveSample(`fixture-${pipeline}`, events);
-    const output = await client.runPipeline(pipeline, sampleId, { pack: packId });
+    const output = await client.runPipeline(pipeline, sampleId, {
+      pack: packId,
+    });
     console.log(`Pipeline produced ${output.length} event(s)`);
 
     const trimmed = trim(output);

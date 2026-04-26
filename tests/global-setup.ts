@@ -7,7 +7,7 @@
  * use (cheap — one HTTP call).
  */
 
-import { CriblClient, getPackId, PACK_ROOT } from './cribl-client.js';
+import { CriblClient, getPackId, PACK_ROOT } from "./cribl-client.js";
 
 export async function setup(): Promise<void> {
   const packId = getPackId();
@@ -15,7 +15,10 @@ export async function setup(): Promise<void> {
 
   const client = new CriblClient({
     host: process.env.CRIBL_HOST,
-    port: process.env.CRIBL_PORT !== undefined ? Number(process.env.CRIBL_PORT) : undefined,
+    port:
+      process.env.CRIBL_PORT !== undefined
+        ? Number(process.env.CRIBL_PORT)
+        : undefined,
     username: process.env.CRIBL_USER,
     password: process.env.CRIBL_PASS,
   });
@@ -31,7 +34,10 @@ export async function teardown(): Promise<void> {
 
   const client = new CriblClient({
     host: process.env.CRIBL_HOST,
-    port: process.env.CRIBL_PORT !== undefined ? Number(process.env.CRIBL_PORT) : undefined,
+    port:
+      process.env.CRIBL_PORT !== undefined
+        ? Number(process.env.CRIBL_PORT)
+        : undefined,
     username: process.env.CRIBL_USER,
     password: process.env.CRIBL_PASS,
   });

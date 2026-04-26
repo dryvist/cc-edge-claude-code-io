@@ -7,12 +7,15 @@
  * pack id flows via env var.
  */
 
-import { CriblClient } from './cribl-client.js';
+import { CriblClient } from "./cribl-client.js";
 
 export function makeClient(): CriblClient {
   return new CriblClient({
     host: process.env.CRIBL_HOST,
-    port: process.env.CRIBL_PORT !== undefined ? Number(process.env.CRIBL_PORT) : undefined,
+    port:
+      process.env.CRIBL_PORT !== undefined
+        ? Number(process.env.CRIBL_PORT)
+        : undefined,
     username: process.env.CRIBL_USER,
     password: process.env.CRIBL_PASS,
   });
@@ -21,7 +24,9 @@ export function makeClient(): CriblClient {
 export function getInstalledPackId(): string {
   const id = process.env.CRIBL_PACK_ID;
   if (id === undefined || id.length === 0) {
-    throw new Error('CRIBL_PACK_ID env var is unset — globalSetup did not run or failed silently.');
+    throw new Error(
+      "CRIBL_PACK_ID env var is unset — globalSetup did not run or failed silently.",
+    );
   }
   return id;
 }
