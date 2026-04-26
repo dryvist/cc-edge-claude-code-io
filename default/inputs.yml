@@ -1,17 +1,48 @@
-# Input definitions (sources). Each input MUST set a metadata.datatype field
-# so route filters can match it. See VisiCore/cc-edge-claude-code-io/default/inputs.yml
-# for a complete example with file-monitor and OTLP inputs.
-#
-# Example skeleton:
-#
-# inputs:
-#   my-input-id:
-#     type: file
-#     disabled: false
-#     sendToRoutes: true
-#     path: $MY_LOG_PATH
-#     filenames: ['*.log']
-#     metadata:
-#       - name: datatype
-#         value: "'my-datatype'"
-inputs: {}
+inputs:
+  Session-Logs-File-Monitor:
+    disabled: false
+    sendToRoutes: true
+    pqEnabled: false
+    streamtags: []
+    mode: manual
+    interval: 10
+    filenames:
+      - "*.jsonl"
+    filterArchivedFiles: false
+    tailOnly: false
+    idleTimeout: 300
+    checkFileModTime: false
+    forceText: false
+    hashLen: 256
+    staleChannelFlushMs: 10000
+    suppressMissingPathErrors: false
+    deleteFiles: false
+    saltHash: false
+    includeUnidentifiableBinary: false
+    recurse: true
+    type: file
+    path: $CLAUDE_HOME
+    metadata:
+      - name: datatype
+        value: "'claude-code-session-logs'"
+  claude-code-otel:
+    disabled: false
+    sendToRoutes: true
+    pqEnabled: false
+    streamtags:
+      - vct
+    host: 0.0.0.0
+    port: 4317
+    tls:
+      disabled: true
+    protocol: grpc
+    extractSpans: false
+    extractMetrics: false
+    otlpVersion: 1.3.1
+    authType: none
+    maxActiveCxn: 1000
+    extractLogs: false
+    type: open_telemetry
+    metadata:
+      - name: datatype
+        value: "'claude-code-otel'"

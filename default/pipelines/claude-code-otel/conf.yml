@@ -1,0 +1,21 @@
+output: default
+streamtags:
+  - vct
+  - ai
+  - claudecode
+  - anthropic
+groups: {}
+asyncFuncTimeout: 1000
+functions:
+  - id: eval
+    filter: "true"
+    disabled: false
+    conf:
+      add:
+        - name: sourcetype
+          value: "'claude:code:otel'"
+        - name: index
+          value: "'claude-code'"
+        - name: datatype
+          value: "'claude-code-otel'"
+description: "Tag OpenTelemetry events from Claude Code with Splunk-canonical sourcetype/index plus the Cribl routing datatype. Future iterations will add OpenTelemetry semantic conventions (gen-ai) and Splunk CIM mapping."

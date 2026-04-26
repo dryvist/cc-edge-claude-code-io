@@ -1,13 +1,20 @@
 {
-  "name": "REPLACE-WITH-PACK-NAME",
-  "version": "0.0.1",
+  "name": "cc-edge-claude-code-io",
+  "version": "1.0.0",
   "minLogStreamVersion": "4.17.0",
-  "author": "Your Name <your.email@example.com>",
-  "description": "REPLACE: Brief description of what this pack does.",
-  "displayName": "REPLACE With Display Name",
+  "author": "VisiCore Tech - CriblPacks@VisiCoreTech.com ",
+  "description": "This Cribl Edge Pack collects Claude Code telemetry from two sources \u2014 session log files (.jsonl transcripts) via a file monitor and operational metrics/logs via OpenTelemetry (OTLP/gRPC) \u2014 and forwards them to a Cribl Stream worker group for indexing, analysis, and search.",
+  "displayName": "Claude Code Pack For Edge",
   "tags": {
-    "streamtags": ["replace", "with", "tags"],
-    "dataType": ["logs"]
+    "streamtags": [
+      "vct",
+      "ai",
+      "claude",
+      "anthropic"
+    ],
+    "dataType": [
+      "logs"
+    ]
   },
   "exports": []
 }

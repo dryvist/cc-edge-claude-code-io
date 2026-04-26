@@ -1,0 +1,19 @@
+name: release-please
+
+# Inherits the canonical release-please pipeline from JacobPEvans/.github
+# (org-wide major-bump block + GitHub App token). See dryvist/.github/CLAUDE.md.
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release-please:
+    uses: JacobPEvans/.github/.github/workflows/_release-please.yml@main
+    secrets:
+      GH_ACTION_JACOBPEVANS_APP_ID: ${{ secrets.GH_ACTION_JACOBPEVANS_APP_ID }}
+      GH_APP_PRIVATE_KEY: ${{ secrets.GH_APP_PRIVATE_KEY }}

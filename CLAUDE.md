@@ -1,93 +1,82 @@
 # CLAUDE.md — guidance for AI assistants working in this repo
 
-This file is read by Claude Code (and other AI assistants supporting `CLAUDE.md`) on every session. It encodes the guardrails for working in this template — and, by inheritance, in any pack scaffolded from it.
+This file is read by Claude Code on every session. It scopes AI behavior for the
+**`cc-edge-claude-code-io`** Cribl Edge pack.
 
-## Repository Type
+For the canonical org-wide policy and tooling baseline (TypeScript everywhere,
+Biome, Vitest, nix-devenv shell, release-please inheritance), read
+[`dryvist/.github/CLAUDE.md`](https://github.com/dryvist/.github/blob/main/CLAUDE.md).
 
-This is a **template repository** for new Cribl Edge / Stream packs. It is consumed via `gh repo create --template`. The files here become the starting point for every downstream pack.
+For the template-level "generic vs pack-specific" boundary, read
+[`dryvist/cc-edge-pack-template/CLAUDE.md`](https://github.com/dryvist/cc-edge-pack-template/blob/main/CLAUDE.md).
 
-## Generic vs Pack-Specific
+## Repository scope
 
-The single most important rule: **distinguish generic files from pack-specific files.**
+Cribl Edge pack that collects Claude Code telemetry and forwards it to a Cribl
+Stream worker group:
 
-**Generic** (DO NOT modify in pack repos — only in this template):
-- `tests/cribl_client.py`
-- `tests/conftest.py`
-- `tests/test_pipelines.py`
-- `tests/test_routes.py`
-- `tests/requirements.txt`
-- `Makefile`
-- `docker-compose.yml`
-- `.github/workflows/test.yml` (only the `pack_type:` value changes per pack)
-- `.github/workflows/release.yml`
+- **Session logs** — file-monitor source watching `$CLAUDE_HOME` for `.jsonl`
+  transcripts (assistant turns, user prompts, tool decisions, etc.)
+- **OpenTelemetry** — OTLP/gRPC source on port 4317 (api_request, token_usage,
+  cost metrics, error events, etc.)
 
-If you find yourself wanting to modify any of the above in a pack repo, **stop**. Either:
+Both pipelines tag events with Splunk-canonical fields:
 
-1. The change belongs in this template (open a PR here, then propagate to packs), or
-2. The change should be expressed as fixture data, not code.
+| Pipeline | sourcetype | index | datatype |
+|---|---|---|---|
+| `claude-code-otel` | `claude:code:otel` | `claude-code` | `claude-code-otel` |
+| `claude-code-session-logs` | `claude:code:session_logs` | `claude-code` | `claude-code-session-logs` |
 
-**Pack-specific** (free to modify per-pack):
-- `package.json` (name, version, displayName, tags, description)
-- `default/pack.yml` (logo)
-- `default/inputs.yml` (sources)
-- `default/pipelines/route.yml` (routes)
-- `default/pipelines/<name>/conf.yml` (pipeline functions)
-- `default/samples.yml` (sample catalog)
-- `data/samples/*.json` (sample events)
-- `tests/fixtures/<pipeline>/*.json` (test fixtures)
-- `README.md` (describe your specific pack)
-- `LICENSE` (use Apache-2.0 unless instructed otherwise)
+## Pack-specific files (you may edit these freely)
 
-## Validator Rules (vct-cribl-pack-validator)
+- `package.json` — pack metadata
+- `default/inputs.yml` — file-monitor + OTLP source config
+- `default/pipelines/route.yml` — routes (filter on `_metadata.datatype`)
+- `default/pipelines/claude-code-{otel,session-logs}/conf.yml` — Eval functions setting sourcetype/index/datatype
+- `default/samples.yml` — sample catalog
+- `data/samples/*.json` — captured sample events
+- `tests/fixtures/<pipeline>/sample.{json,expected.json}` — Vitest fixtures
+- `README.md` — describe what this pack does
 
-Always enforce these — they are non-negotiable per the [validator skill](https://github.com/VisiCore/vct-cribl-pack-validator):
+## Generic files (DO NOT modify here — push changes upstream to the template)
 
-| Rule | What it means |
-|---|---|
-| Pack ID format | `cc-edge-<source>-io` for Edge, `cc-stream-<source>-io` for Stream |
-| No pipeline named `main` | All pipelines must have descriptive names |
-| All routes use `output: __group` | Never `input_id` (breaks on source rename) |
-| All sources have `metadata.datatype` | So route filters can match |
-| Filters must be dynamic | Never literal `false` / `0` |
-| No hardcoded paths | Use environment variables (`$MY_LOG_PATH`) |
-| No hardcoded credentials | Use Cribl secrets |
-| PII fields masked | `email`, `username`, `*_id`, `src_ip`, etc. before destinations |
+- `tests/cribl-client.ts`, `tests/parse-filter.ts`, `tests/global-setup.ts`,
+  `tests/test-helpers.ts`, `tests/routes.test.ts`, `tests/pipelines.test.ts`
+- `tests/package.json`, `tests/tsconfig.json`, `tests/vitest.config.ts`,
+  `tests/pnpm-lock.yaml`
+- `tests/generate-fixtures.ts` (re-run when fixtures need regeneration)
+- `biome.jsonc`, `flake.nix`, `.envrc`, `Makefile`, `docker-compose.yml`,
+  `.gitignore`
+- `.github/workflows/{test,release,release-please}.yml`
 
-## Fixture Convention
-
-When adding tests, follow filesystem convention — no Python edits required:
-
-```
-tests/fixtures/<pipeline-name>/<case>.json           # input
-tests/fixtures/<pipeline-name>/<case>.expected.json  # optional expected output (partial match)
-```
-
-The generic `test_pipelines.py` auto-discovers and parametrizes one test per `<case>.json` it finds. If `<case>.expected.json` is missing, the case is a smoke test (asserts non-empty output only). When you add an expected file, the assertions tighten automatically.
-
-Prefer richer fixtures over richer Python. If the assertion can't be expressed as a partial-match expected event, it probably shouldn't be a test — consider whether it's really a pipeline behavior or something else.
-
-## Don't Invent — Reuse
-
-Per the user's rules:
-
-- **Use existing Cribl tooling** — `cribl pipe`, the management API, official Docker images. Don't reinvent.
-- **Use existing third-party Actions** — `softprops/action-gh-release`, `rlespinasse/github-slug-action`, `actions/setup-python`. Don't write custom packaging shell scripts.
-- **Use the criblpacks pattern** — that's where `cribl_client.py` came from. When extending, mirror their idioms.
-- **Use vct-cribl-pack-validator** — for deep structural validation, not custom-rolled YAML parsers.
+If something here needs changing, open a PR against
+[`dryvist/cc-edge-pack-template`](https://github.com/dryvist/cc-edge-pack-template)
+and let it propagate.
 
 ## Workflow
 
-For any pack work:
+```sh
+direnv allow                  # activate nix-devenv typescript shell
+cd tests && pnpm install      # install Vitest, biome, etc.
+make docker-up                # start cribl/cribl test container
+make test                     # vitest run (typecheck + 11 tests)
+make docker-down              # stop test container
+```
 
-1. `/refresh-repo` then create a worktree for the change (per user's global CLAUDE.md).
-2. Modify only pack-specific files (see lists above).
-3. `make test` locally before committing.
-4. `make validate` before tagging a release.
-5. Tag `vX.Y.Z` to trigger the release workflow.
+To regenerate expected fixtures (after pipeline changes):
 
-## When in Doubt
+```sh
+make docker-up
+cd tests
+pnpm exec tsx generate-fixtures.ts <pipeline-name> fixtures/<pipeline>/sample.json
+```
 
-- Read [`VisiCore/cc-edge-claude-code-io`](https://github.com/VisiCore/cc-edge-claude-code-io) — the gold-standard reference pack.
-- Read [`criblpacks/cribl-palo-alto-networks`](https://github.com/criblpacks/cribl-palo-alto-networks) — Cribl's own test pattern reference.
-- Read [`VisiCore/vct-cribl-pack-validator`](https://github.com/VisiCore/vct-cribl-pack-validator) — the authoritative ruleset.
-- Don't add scripts. If you're tempted to write a script, ask first whether a Cribl-native or GitHub Action equivalent already exists.
+## Future work (not in scope right now)
+
+- OpenTelemetry semantic conventions for generative AI (see
+  <https://opentelemetry.io/docs/specs/semconv/gen-ai/>)
+- Splunk Common Information Model (CIM) mappings on both pipelines
+- PII masking for Claude Code session content (`message.content`,
+  `toolUseResult.stdout`, etc.) before stream forwarding
+
+These are deliberate next steps once the TS test harness has stabilized.

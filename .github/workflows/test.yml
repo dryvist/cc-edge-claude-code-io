@@ -16,9 +16,8 @@ permissions:
 
 jobs:
   test:
-    # Skip on the template repo itself; consumer repos have is_template: false.
-    if: github.event.repository.is_template == false
-    uses: dryvist/.github/.github/workflows/cribl-pack-test.yml@main
+    # Pinned to feature/ts-pivot until dryvist/cc-edge-pack-template#3 lands.
+    # Flip to @main as soon as that PR merges.
+    uses: dryvist/cc-edge-pack-template/.github/workflows/cribl-pack-test.yml@feature/ts-pivot
     with:
-      # CHANGE per pack: 'edge' for Cribl Edge packs, 'stream' for Cribl Stream packs.
       pack_type: edge

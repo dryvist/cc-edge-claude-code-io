@@ -1,0 +1,21 @@
+output: default
+streamtags:
+  - vct
+  - ai
+  - claudecode
+  - anthropic
+groups: {}
+asyncFuncTimeout: 1000
+functions:
+  - id: eval
+    filter: "true"
+    disabled: false
+    conf:
+      add:
+        - name: sourcetype
+          value: "'claude:code:session_logs'"
+        - name: index
+          value: "'claude-code'"
+        - name: datatype
+          value: "'claude-code-session-logs'"
+description: "Tag Claude Code file-monitor session log events with Splunk-canonical sourcetype/index plus the Cribl routing datatype. Future iterations will add Splunk CIM mapping for assistant/user/tool turns."
