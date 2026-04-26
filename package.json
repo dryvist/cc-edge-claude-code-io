@@ -6,8 +6,15 @@
   "description": "Cribl Edge pack collecting Claude Code telemetry — session logs and OpenTelemetry metrics — for forwarding to a Cribl Stream worker group.",
   "displayName": "Claude Code I/O",
   "tags": {
-    "streamtags": ["claude-code", "ai", "observability"],
-    "dataType": ["logs", "metrics"]
+    "streamtags": [
+      "claude-code",
+      "ai",
+      "observability"
+    ],
+    "dataType": [
+      "logs",
+      "metrics"
+    ]
   },
   "exports": []
 }
