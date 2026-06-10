@@ -1,10 +1,17 @@
-# cc-edge-pack-template
+# cc-edge-claude-code-io
 
-Template repository for new Cribl Edge / Stream packs. Provides the full DRY scaffolding (test harness, validation, release packaging, Makefile, Docker setup) so per-pack repos only contain pack-specific configuration and fixture data.
+> **Status: template-derived shell — do not deploy.** This repo is the **future dryvist home** of the canonical Claude Code
+> pack, currently maintained at [JacobPEvans-personal/cc-edge-claude-code-otel](https://github.com/JacobPEvans-personal/cc-edge-claude-code-otel)
+> (v1.2.x). Content migration is tracked in [issue #7](https://github.com/dryvist/cc-edge-claude-code-io/issues/7).
+> Until it lands, install the canonical pack's releases instead of this shell.
+
+Template repository for new Cribl Edge / Stream packs. Provides the full DRY scaffolding (test harness, validation, release
+packaging, Makefile, Docker setup) so per-pack repos only contain pack-specific configuration and fixture data.
 
 This template is built around two existing references:
 
-- **Layout & convention**: based on [`VisiCore/cc-edge-claude-code-io`](https://github.com/VisiCore/cc-edge-claude-code-io), the gold-standard pack deployed to the Cribl dispensary.
+- **Layout & convention**: based on [`VisiCore/cc-edge-claude-code-io`](https://github.com/VisiCore/cc-edge-claude-code-io),
+  the gold-standard pack deployed to the Cribl dispensary.
 - **Test pattern**: adopts the [criblpacks](https://github.com/criblpacks) approach (Python + Docker + Cribl management API). See [`criblpacks/cribl-palo-alto-networks/test/`](https://github.com/criblpacks/cribl-palo-alto-networks/tree/main/test).
 
 CI delegates entirely to reusable workflows in [`dryvist/.github`](https://github.com/dryvist/.github).
@@ -29,7 +36,8 @@ If you prefer the GitHub UI: navigate to this repo, click **Use this template** 
 
 After scaffolding from the template:
 
-1. **Customize `package.json`**: replace `name`, `description`, `displayName`, `tags`. Pack name MUST follow the validator convention `cc-edge-<source>-io` (or `cc-stream-<source>-io`).
+1. **Customize `package.json`**: replace `name`, `description`, `displayName`, `tags`. Pack name MUST follow the validator
+   convention `cc-edge-<source>-io` (or `cc-stream-<source>-io`).
 2. **Set the pack type in `.github/workflows/test.yml`**: change `pack_type: edge` to `stream` if this is a Stream pack.
 3. **Define your inputs** in `default/inputs.yml`. Every input must declare `metadata.datatype` so route filters can match.
 4. **Define your routes** in `default/pipelines/route.yml`. Replace the `REPLACE_*` placeholders. All routes MUST `output: __group` (validator rule).
@@ -39,12 +47,13 @@ After scaffolding from the template:
    - `<case>.json` (input)
    - `<case>.expected.json` (optional partial-match expected output)
 8. **Run locally**: `make docker-up && make test`
-9. **Validate**: `make validate` builds the `.crbl` and prints the command to run [`/validate-pack`](https://github.com/VisiCore/vct-cribl-pack-validator) against it.
+9. **Validate**: `make validate` builds the `.crbl` and prints the command to run
+   [`/validate-pack`](https://github.com/VisiCore/vct-cribl-pack-validator) against it.
 10. **Push & release**: tag `vX.Y.Z` and the release workflow builds and uploads the `.crbl` to a GitHub release.
 
 ## Layout
 
-```
+```text
 .
 ├── .github/workflows/
 │   ├── release.yml          # Calls dryvist reusable workflow
@@ -77,7 +86,8 @@ After scaffolding from the template:
 └── CLAUDE.md                # GENERIC — AI assistant guidance
 ```
 
-The "GENERIC" files are propagated from this template. When the template improves, downstream packs should pull the changes via cherry-pick or by re-running the relevant section. When something is pack-specific, edit it freely in the pack repo.
+The "GENERIC" files are propagated from this template. When the template improves, downstream packs should pull the changes
+via cherry-pick or by re-running the relevant section. When something is pack-specific, edit it freely in the pack repo.
 
 ## API
 
@@ -94,7 +104,8 @@ This template is the source of truth for shared pack infrastructure across the C
 When updating:
 
 1. Make changes in this repo on a feature branch.
-2. Open a PR against `main`. Note that the template's own CI workflows are gated on `is_template == false`, so they won't run here — verify against a real pack instead.
+2. Open a PR against `main`. Note that the template's own CI workflows are gated on `is_template == false`, so they won't
+   run here — verify against a real pack instead.
 3. Pick a downstream pack (e.g. `VisiCore/cc-edge-claude-code-io`) and apply the same changes there in a parallel PR. Confirm CI green.
 4. Merge both. Document the propagation expectation in the PR description.
 
