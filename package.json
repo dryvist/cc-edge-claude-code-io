@@ -1,12 +1,12 @@
 {
-  "name": "REPLACE-WITH-PACK-NAME",
+  "name": "cc-edge-claude-code-io",
   "version": "0.0.1",
   "minLogStreamVersion": "4.17.0",
-  "author": "Your Name <your.email@example.com>",
-  "description": "REPLACE: Brief description of what this pack does.",
-  "displayName": "REPLACE With Display Name",
+  "author": "VisiCore Tech - CriblPacks@VisiCoreTech.com",
+  "description": "Collects Claude Code telemetry from OpenTelemetry and/or session log sources via Cribl Edge. Future dryvist home of the canonical cc-edge-claude-code pack.",
+  "displayName": "Claude Code Pack For Edge",
   "tags": {
-    "streamtags": ["replace", "with", "tags"],
+    "streamtags": ["vct", "ai", "claude", "anthropic"],
     "dataType": ["logs"]
   },
   "exports": []
