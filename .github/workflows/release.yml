@@ -12,4 +12,4 @@ permissions:
 jobs:
   release:
     if: github.event.repository.is_template == false
-    uses: dryvist/.github/.github/workflows/cribl-pack-release.yml@main
+    uses: dryvist/cc-edge-pack-template/.github/workflows/cribl-pack-release.yml@main
