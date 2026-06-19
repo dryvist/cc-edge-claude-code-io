@@ -1,123 +1,143 @@
 # cc-edge-claude-code-io
 
-> **Status: template-derived shell — do not deploy.** This repo is the **future dryvist home** of the canonical Claude Code
-> pack, currently maintained at [JacobPEvans-personal/cc-edge-claude-code-otel](https://github.com/JacobPEvans-personal/cc-edge-claude-code-otel)
-> (v1.2.x). Content migration is tracked in [issue #7](https://github.com/dryvist/cc-edge-claude-code-io/issues/7).
-> Until it lands, install the canonical pack's releases instead of this shell.
+> **Status: work in progress — not production-ready.** This pack is a
+> template-derived shell. Its routes and pipelines are demo placeholders today;
+> the canonical Claude Code telemetry pipelines are still being authored. Don't
+> deploy it as-is.
 
-Template repository for new Cribl Edge / Stream packs. Provides the full DRY scaffolding (test harness, validation, release
-packaging, Makefile, Docker setup) so per-pack repos only contain pack-specific configuration and fixture data.
+A [Cribl Edge](https://docs.cribl.io/edge/) pack that collects Claude Code
+telemetry from OpenTelemetry (OTLP) and/or session-log sources, normalizes it,
+and routes it for downstream delivery with Splunk-canonical fields
+(`sourcetype`, `index`, `datatype`) stamped on every event.
 
-This template is built around two existing references:
-
-- **Layout & convention**: based on [`VisiCore/cc-edge-claude-code-io`](https://github.com/VisiCore/cc-edge-claude-code-io),
-  the gold-standard pack deployed to the Cribl dispensary.
-- **Test pattern**: adopts the [criblpacks](https://github.com/criblpacks) approach (Python + Docker + Cribl management API). See [`criblpacks/cribl-palo-alto-networks/test/`](https://github.com/criblpacks/cribl-palo-alto-networks/tree/main/test).
-
-CI delegates entirely to reusable workflows in [`dryvist/.github`](https://github.com/dryvist/.github).
+The pack contains only declarative Cribl configuration (sources, routes,
+pipelines, samples) plus a Python test harness that exercises those pipelines
+against the Cribl management API. CI delegates to reusable GitHub Actions
+workflows; tagging a release builds and uploads the `.crbl` artifact.
 
 ## Installation
 
-Create a new pack repo from this template:
+Clone the repo and install the Python test dependencies into a repo-local
+virtualenv:
 
 ```sh
-gh repo create my-org/cc-edge-mything-io \
-  --template dryvist/cc-edge-pack-template \
-  --public \
-  --clone
-
-cd cc-edge-mything-io
-make install   # creates .venv at repo root and installs deps
+git clone git@github.com:dryvist/cc-edge-claude-code-io.git
+cd cc-edge-claude-code-io
+make install   # creates .venv at repo root and installs test deps
 ```
 
-If you prefer the GitHub UI: navigate to this repo, click **Use this template** → **Create a new repository**.
+Build the deployable pack artifact:
+
+```sh
+make build     # produces cc-edge-claude-code-io-<version>.crbl
+```
+
+Import the resulting `.crbl` into Cribl Stream or Cribl Edge via **Manage →
+Packs → Add Pack → Import from File**.
 
 ## Usage
 
-After scaffolding from the template:
+`make help` lists every target. The common loop:
 
-1. **Customize `package.json`**: replace `name`, `description`, `displayName`, `tags`. Pack name MUST follow the validator
-   convention `cc-edge-<source>-io` (or `cc-stream-<source>-io`).
-2. **Set the pack type in `.github/workflows/test.yml`**: change `pack_type: edge` to `stream` if this is a Stream pack.
-3. **Define your inputs** in `default/inputs.yml`. Every input must declare `metadata.datatype` so route filters can match.
-4. **Define your routes** in `default/pipelines/route.yml`. Replace the `REPLACE_*` placeholders. All routes MUST `output: __group` (validator rule).
-5. **Define your pipelines** in `default/pipelines/<name>/conf.yml`. No pipeline named `main` (validator rule).
-6. **Drop sample events** in `data/samples/*.json` and catalog them in `default/samples.yml`.
-7. **Author test fixtures** in `tests/fixtures/<pipeline-name>/`:
-   - `<case>.json` (input)
-   - `<case>.expected.json` (optional partial-match expected output)
-8. **Run locally**: `make docker-up && make test`
-9. **Validate**: `make validate` builds the `.crbl` and prints the command to run
-   [`/validate-pack`](https://github.com/VisiCore/vct-cribl-pack-validator) against it.
-10. **Push & release**: tag `vX.Y.Z` and the release workflow builds and uploads the `.crbl` to a GitHub release.
+| Target | What it does |
+| --- | --- |
+| `make install` | Create `.venv` and install Python test dependencies |
+| `make build` | Build the `.crbl` pack artifact |
+| `make docker-up` | Start a local `cribl/cribl` container on `localhost:9000` |
+| `make test` | Run the pytest suite against the running container |
+| `make docker-down` | Stop and remove the container |
+| `make validate` | Build the `.crbl` and print validation instructions |
+| `make clean` | Remove build artifacts, the venv, and the Docker container |
+
+### Configure the pack
+
+Pack configuration lives under `default/` and is edited directly:
+
+1. **`package.json`** — `name`, `description`, `displayName`, `tags`. The pack
+   name follows the convention `cc-edge-<source>-io` (Edge) or
+   `cc-stream-<source>-io` (Stream).
+2. **`default/inputs.yml`** — source definitions. Every input must declare
+   `metadata.datatype` so route filters can match it.
+3. **`default/pipelines/route.yml`** — routes. Every route must set
+   `output: __group` (never `input_id`, which breaks on source rename).
+4. **`default/pipelines/<name>/conf.yml`** — pipeline functions. No pipeline may
+   be named `main`.
+5. **`default/samples.yml`** + **`data/samples/*.json`** — sample events for
+   Cribl's UI sample-data preview.
+
+### Add tests
+
+Tests are driven by filesystem convention — no Python edits required:
+
+```text
+tests/fixtures/<pipeline-name>/<case>.json           # input event
+tests/fixtures/<pipeline-name>/<case>.expected.json  # optional expected output
+```
+
+The test harness auto-discovers and parametrizes one test per `<case>.json`. A
+case with no `<case>.expected.json` is a smoke test (asserts non-empty output);
+adding the expected file tightens the assertions automatically. See
+[`tests/README.md`](tests/README.md) for details.
+
+### Run a release
+
+Tag `vX.Y.Z` and push the tag. The release workflow builds the `.crbl` and
+uploads it to a GitHub release.
 
 ## Layout
 
 ```text
 .
 ├── .github/workflows/
-│   ├── release.yml          # Calls dryvist reusable workflow
-│   └── test.yml             # Calls dryvist reusable workflow
+│   ├── release.yml          # Build + publish the .crbl on tag
+│   └── test.yml             # Run the test harness on push / PR
 ├── data/
 │   └── samples/             # Cribl sample events (referenced by samples.yml)
 ├── default/
-│   ├── inputs.yml           # Source definitions — pack-specific
-│   ├── pack.yml             # Branding (logo) — pack-specific
+│   ├── inputs.yml           # Source definitions
+│   ├── pack.yml             # Branding (logo)
 │   ├── pipelines/
-│   │   ├── route.yml        # Routes — pack-specific
-│   │   └── <name>/conf.yml  # Pipeline functions — pack-specific
-│   └── samples.yml          # Sample catalog — pack-specific
+│   │   ├── route.yml        # Routes
+│   │   └── <name>/conf.yml  # Pipeline functions
+│   └── samples.yml          # Sample catalog
 ├── tests/
-│   ├── conftest.py          # GENERIC — never modify
-│   ├── cribl_client.py      # GENERIC — never modify
-│   ├── test_pipelines.py    # GENERIC — never modify
-│   ├── test_routes.py       # GENERIC — never modify
-│   ├── requirements.txt     # GENERIC — bump versions in template, propagate
-│   ├── fixtures/            # Per-pack fixture data
-│   │   └── <pipeline>/
-│   │       ├── <case>.json              # input
-│   │       └── <case>.expected.json     # expected (optional)
+│   ├── conftest.py          # Pytest fixtures / Cribl client wiring
+│   ├── cribl_client.py      # Cribl management API client
+│   ├── test_pipelines.py    # Pipeline fixtures → expected output
+│   ├── test_routes.py       # Route-config assertions
+│   ├── requirements.txt     # Python test dependencies
+│   ├── fixtures/            # Per-pipeline fixture data
 │   └── README.md
-├── docker-compose.yml       # GENERIC — never modify
-├── Makefile                 # GENERIC — never modify
-├── package.json             # PACK-SPECIFIC — name, version, tags
-├── README.md                # PACK-SPECIFIC — describe your pack
-├── LICENSE                  # GENERIC — Apache-2.0
-└── CLAUDE.md                # GENERIC — AI assistant guidance
+├── docker-compose.yml       # Local cribl/cribl container for tests
+├── Makefile                 # Build / test / validate entry points
+├── package.json             # Pack manifest (name, version, tags)
+└── LICENSE                  # Apache-2.0
 ```
-
-The "GENERIC" files are propagated from this template. When the template improves, downstream packs should pull the changes
-via cherry-pick or by re-running the relevant section. When something is pack-specific, edit it freely in the pack repo.
 
 ## API
 
-This template doesn't expose a programmatic API. It provides:
+This pack exposes no programmatic API. Its interfaces are:
 
-- **CLI surface (Makefile)**: `make help`, `install`, `build`, `docker-up`, `docker-down`, `test`, `validate`, `clean`
-- **Test fixture surface**: filesystem convention under `tests/fixtures/<pipeline>/<case>.{json,expected.json}` — see `tests/README.md` for details
-- **CI surface**: `.github/workflows/test.yml` and `release.yml` — both delegate to `dryvist/.github` reusable workflows
-
-## Contributing
-
-This template is the source of truth for shared pack infrastructure across the Cribl pack ecosystem. Changes here propagate to every downstream pack.
-
-When updating:
-
-1. Make changes in this repo on a feature branch.
-2. Open a PR against `main`. Note that the template's own CI workflows are gated on `is_template == false`, so they won't
-   run here — verify against a real pack instead.
-3. Pick a downstream pack (e.g. `VisiCore/cc-edge-claude-code-io`) and apply the same changes there in a parallel PR. Confirm CI green.
-4. Merge both. Document the propagation expectation in the PR description.
-
-## License
-
-Apache-2.0 — see `LICENSE`.
+- **CLI surface (Makefile):** `make help`, `install`, `build`, `docker-up`,
+  `docker-down`, `test`, `validate`, `clean`.
+- **Test fixture surface:** the filesystem convention under
+  `tests/fixtures/<pipeline>/<case>.{json,expected.json}` — see
+  [`tests/README.md`](tests/README.md).
+- **CI surface:** `.github/workflows/test.yml` and `release.yml`, which delegate
+  to reusable workflows.
+- **Output contract:** events emitted with Splunk-canonical fields
+  (`sourcetype`, `index`, `datatype`) for downstream Cribl / Splunk delivery.
 
 ## References
 
-- [VisiCore/cc-edge-claude-code-io](https://github.com/VisiCore/cc-edge-claude-code-io) — pilot pack and structural reference
-- [VisiCore/vct-cribl-pack-validator](https://github.com/VisiCore/vct-cribl-pack-validator) — Claude Code skill running 27+ structural checks
-- [criblpacks](https://github.com/criblpacks) — Cribl's official pack org; we adopt their test pattern
-- [dryvist/.github](https://github.com/dryvist/.github) — hosts the reusable workflows this template calls
+- [Cribl Edge docs](https://docs.cribl.io/edge/)
+- [Cribl Packs docs](https://docs.cribl.io/stream/packs/)
 - [Cribl management API](https://docs.cribl.io/api-reference/)
-- [Cribl pack docs](https://docs.cribl.io/stream/packs/)
+
+## License
+
+Apache-2.0 — see [`LICENSE`](LICENSE).
+
+---
+
+> Part of a [larger ecosystem of ~40 repos](https://docs.jacobpevans.com) — see how it all fits together.
