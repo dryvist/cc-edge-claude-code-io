@@ -140,4 +140,5 @@ Apache-2.0 — see [`LICENSE`](LICENSE).
 
 ---
 
-> Part of a [larger ecosystem of ~40 repos](https://docs.jacobpevans.com) — see how it all fits together.
+> Part of a [larger ecosystem of ~40 repos](https://docs.jacobpevans.com) —
+> see how it all fits together.
