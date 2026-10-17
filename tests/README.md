@@ -41,7 +41,7 @@ Or run pytest directly (assuming the container is already running):
 ```
 
 In CI, the reusable workflow
-`dryvist/.github/.github/workflows/cribl-pack-test.yml` runs the same
+`JacobPEvans/.github/.github/workflows/cribl-pack-test.yml` runs the same
 `pytest tests/` against an ephemeral `cribl/cribl` service container.
 
 ## Layout
