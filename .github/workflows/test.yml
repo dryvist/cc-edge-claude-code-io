@@ -20,5 +20,6 @@ jobs:
     if: github.event.repository.is_template == false
     uses: JacobPEvans/.github/.github/workflows/_cribl-pack-validate.yml@v1
     with:
+      test_suite_owner: JacobPEvans
       # CHANGE per pack: 'edge' for Cribl Edge packs, 'stream' for Cribl Stream packs.
       pack_type: edge
