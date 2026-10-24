@@ -12,4 +12,4 @@ permissions:
 jobs:
   release:
     if: github.event.repository.is_template == false
-    uses: jpe-cribl/.github/.github/workflows/cribl-pack-release.yml@e74b14b20c29e990826227c84ebd9b503da3abb1 # main
+    uses: jpe-cribl/.github/.github/workflows/cribl-pack-release.yml@85979cf7ff1a41f28ad0c67312660303b5c2cfc2 # main
