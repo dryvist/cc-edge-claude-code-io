@@ -105,7 +105,7 @@ class in `cribl_client.py` exposes:
 ## Contributing
 
 Generic test files (`cribl_client.py`, `conftest.py`, `test_pipelines.py`,
-`test_routes.py`, `requirements.txt`) live in `dryvist/cc-edge-pack-template`.
+`test_routes.py`, `requirements.txt`) live in `jpe-cribl/cc-edge-pack-template`.
 Changes must be made there and propagated to consuming packs — do not modify
 in-place inside a pack repo without first updating the template.
 

@@ -21,7 +21,7 @@ Clone the repo and install the Python test dependencies into a repo-local
 virtualenv:
 
 ```sh
-git clone git@github.com:dryvist/cc-edge-claude-code-io.git
+git clone git@github.com:jpe-cribl/cc-edge-claude-code-io.git
 cd cc-edge-claude-code-io
 make install   # creates .venv at repo root and installs test deps
 ```
