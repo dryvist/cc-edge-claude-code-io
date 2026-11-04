@@ -2,12 +2,6 @@ name: Test
 
 on:
   pull_request:
-    paths:
-      - 'default/**'
-      - 'data/samples/**'
-      - 'tests/**'
-      - 'package.json'
-      - '.github/workflows/test.yml'
   push:
     branches: [main]
 
@@ -22,3 +16,16 @@ jobs:
     with:
       # CHANGE per pack: 'edge' for Cribl Edge packs, 'stream' for Cribl Stream packs.
       pack_type: edge
+
+  pack-tests:
+    # Always reports on every PR, so rulesets can require it.
+    name: Pack tests
+    needs: test
+    if: always()
+    timeout-minutes: 2
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require the pack test jobs to pass
+        env:
+          RESULT: ${{ needs.test.result }}
+        run: test "$RESULT" = success
